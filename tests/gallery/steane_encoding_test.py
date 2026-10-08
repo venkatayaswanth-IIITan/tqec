@@ -21,29 +21,3 @@ def test_steane_encoding_filled(obs_basis: Basis) -> None:
     assert g.num_cubes == 19
     assert g.num_pipes == 20
     assert len(g.leaf_cubes) == 7
-
-
-@pytest.mark.parametrize(
-    "obs_basis, num_surfaces, external_stabilizers",
-    [
-        (Basis.X, 3, {"IXXIIXX", "XIXIXXI", "XIIXIXX"}),
-        (Basis.Z, 4, {"ZZIIIZI", "IZZIZII", "IIZZIZI", "IZZIIZZ"}),
-    ],
-)
-def test_steane_encoding_correlation_surface(
-    obs_basis: Basis, num_surfaces: int, external_stabilizers: set[str]
-) -> None:
-    g = steane_encoding(obs_basis)
-    correlation_surfaces = g.find_correlation_surfaces()
-    assert len(correlation_surfaces) == num_surfaces
-    assert external_stabilizers == {s.external_stabilizer_on_graph(g) for s in correlation_surfaces}
-
-
-def test_steane_encoding_ports_filling() -> None:
-    g = steane_encoding()
-    filled_graphs = g.fill_ports_for_minimal_simulation()
-    assert len(filled_graphs) == 2
-    assert {frozenset(fg.stabilizers) for fg in filled_graphs} == {
-        frozenset({"IIXXXIX", "IXIXXXI", "XIIXIXX"}),
-        frozenset({"IIZZIZI", "ZIIZZII", "IZIZZZI", "IIIIZZZ"}),
-    }

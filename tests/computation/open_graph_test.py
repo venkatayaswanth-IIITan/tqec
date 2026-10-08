@@ -8,12 +8,14 @@ from tqec.compile.compile import compile_block_graph
 from tqec.computation.open_graph import FilledGraph, fill_ports_for_minimal_simulation
 from tqec.gallery.cnot import cnot
 from tqec.gallery.move_rotation import move_rotation
+from tqec.gallery.steane_encoding import steane_encoding
 from tqec.gallery.three_cnots import three_cnots
 
 OPEN_PORT_EXAMPLES = {
     "cnot": cnot,
     "three_cnots": three_cnots,
     "move_rotation": move_rotation,
+    "steane_encoding": steane_encoding,
 }
 
 # networkx's documented coloring strategy names (passed as strings to

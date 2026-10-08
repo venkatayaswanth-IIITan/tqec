@@ -7,7 +7,10 @@ from tests.interop.collada.read_write_test import rotated_cnot
 from tqec.computation.block_graph import BlockGraph
 from tqec.computation.cube import ConditionalCubeKind, Cube, CubeKind, LeafCubeKind, ZXCube
 from tqec.computation.pipe import PipeKind
-from tqec.gallery import cnot, memory
+from tqec.gallery import cnot, cz, memory
+from tqec.gallery.move_rotation import move_rotation
+from tqec.gallery.steane_encoding import steane_encoding
+from tqec.gallery.three_cnots import three_cnots
 from tqec.utils.enums import Basis
 from tqec.utils.exceptions import TQECError
 from tqec.utils.position import Direction3D, Position3D
@@ -227,6 +230,33 @@ def test_graph_rotation() -> None:
     rg = g.rotate(Direction3D.Z)
     assert Position3D(-1, 0, 0) in rg
     assert str(rg.cubes[0].kind) == "Y"
+
+
+@pytest.mark.parametrize(
+    "graph_fn, num_ports, num_cubes, num_pipes, num_leaf_cubes, bounding_box",
+    [
+        (cnot, 4, 10, 9, 4, (2, 2, 4)),
+        (cz, 4, 6, 5, 4, (2, 3, 3)),
+        (move_rotation, 2, 5, 4, 2, (2, 2, 3)),
+        (steane_encoding, 7, 19, 20, 7, (4, 3, 4)),
+        (three_cnots, 6, 12, 12, 6, (4, 3, 4)),
+    ],
+)
+def test_gallery_open_block_graph_properties(
+    graph_fn,
+    num_ports: int,
+    num_cubes: int,
+    num_pipes: int,
+    num_leaf_cubes: int,
+    bounding_box: tuple[int, int, int],
+) -> None:
+    graph = graph_fn()
+
+    assert graph.num_ports == num_ports
+    assert graph.num_cubes == num_cubes
+    assert graph.num_pipes == num_pipes
+    assert len(graph.leaf_cubes) == num_leaf_cubes
+    assert graph.bounding_box_size() == bounding_box
 
 
 @pytest.mark.parametrize("obs_basis", [Basis.Z, Basis.X, None])

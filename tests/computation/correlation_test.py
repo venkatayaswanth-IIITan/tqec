@@ -14,9 +14,11 @@ from tqec.computation.correlation import (
     ZXNode,
     find_correlation_surfaces,
 )
-from tqec.gallery import memory
+from tqec.gallery import cnot, cz, memory
 from tqec.gallery.h import h
+from tqec.gallery.move_rotation import move_rotation
 from tqec.gallery.steane_encoding import steane_encoding
+from tqec.gallery.three_cnots import three_cnots
 from tqec.interop.pyzx.positioned import PositionedZX
 from tqec.utils.enums import Basis
 from tqec.utils.position import Position3D
@@ -379,3 +381,33 @@ def test_correlation_representations_conversion(
             surface._to_mutable_graph_representation(pg).to_immutable_public_representation(pg)
             == surface
         )
+
+
+@pytest.mark.parametrize(
+    "graph_fn, arg, num_surfaces, external_stabilizers",
+    [
+        (cnot, Basis.X, 2, {"XXIX", "XXXI"}),
+        (cnot, Basis.Z, 2, {"ZZII", "IZZZ"}),
+        (cnot, None, 4, {"ZIZI", "ZZIZ", "XIXX", "XXXI"}),
+        (cz, ["ZZ -> ZZ"], 2, {"IIZZ", "ZZII"}),
+        (cz, ["XI -> XZ"], 2, {"XXIZ", "XXZI"}),
+        (cz, None, 4, {"XZXI", "ZIZI", "ZXIX", "XIXZ"}),
+        (move_rotation, Basis.X, 1, {"XX"}),
+        (move_rotation, Basis.Z, 1, {"ZZ"}),
+        (move_rotation, None, 2, {"XX", "ZZ"}),
+        (steane_encoding, Basis.X, 3, {"IXXIIXX", "XIXIXXI", "XIIXIXX"}),
+        (steane_encoding, Basis.Z, 4, {"ZZIIIZI", "IZZIZII", "IIZZIZI", "IZZIIZZ"}),
+        (three_cnots, Basis.X, 3, {"IIXXIX", "XXXIXI", "XXXXII"}),
+        (three_cnots, Basis.Z, 3, {"IZIZZZ", "IZZIIZ", "ZZIIII"}),
+    ],
+)
+def test_gallery_correlation_surfaces(
+    graph_fn: Callable[..., BlockGraph],
+    arg: Basis | list[str] | None,
+    num_surfaces: int,
+    external_stabilizers: set[str],
+) -> None:
+    g = graph_fn(arg)
+    correlation_surfaces = g.find_correlation_surfaces()
+    assert len(correlation_surfaces) == num_surfaces
+    assert {s.external_stabilizer_on_graph(g) for s in correlation_surfaces} == external_stabilizers
